@@ -1,5 +1,8 @@
 <template>
   <v-app light>
+    <v-toolbar>
+      <v-toolbar-title>YOKLA</v-toolbar-title>
+    </v-toolbar>
     <home></home>
   </v-app>
 </template>
