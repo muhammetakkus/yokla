@@ -1,6 +1,6 @@
-# yokla
+# Yokla
 
-> Yokla is a realtime student checking SPA with Vue + Vuetify + Firebase
+> Yokla is a realtime student checking SPA with Vue + Vuex + Vuetify + Firebase
 
 ## Build Setup
 
