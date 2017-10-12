@@ -1,20 +1,24 @@
 <template>
     <v-layout row>
         <v-flex xs12>
-            <v-btn v-if="!insert" @click="changeInsert">+YENİ KİŞİ EKLE</v-btn>
-            <v-form v-if="insert">
-                <v-text-field
-                        label="Name"
-                        required
-                ></v-text-field>
-                <v-btn>EKLE</v-btn>
+            <v-btn @click="back">GERİ</v-btn>
+            <v-btn v-if="!insert" @click="(insert = !insert)">+YENİ KİŞİ EKLE</v-btn>
+            <v-form @submit.prevent="userInsert" v-if="insert">
+            <v-text-field
+                    label="Tam isim"
+                    v-model="name"
+                    required
+            ></v-text-field>
+            <v-btn type="submit">EKLE</v-btn>
+            <v-btn @click="(insert = !insert)">İPTAL</v-btn>
             </v-form>
             <v-card>
                 <v-toolbar class="white--text indigo" dark dense>
                     <v-toolbar-title>kişiler</v-toolbar-title>
                 </v-toolbar>
-                <v-list>
-                    <v-list-tile avatar v-for="item in users" v-bind:key="item.name" @click="">
+                <v-list class="text-xs-center">
+                    <v-progress-circular indeterminate class="primary--text text-sm-center" :width="7" :size="70" v-if="loading"></v-progress-circular>
+                    <v-list-tile avatar v-for="item in getUsers" v-bind:key="item.name" @click="" v-if="!loading">
                         <v-list-tile-content>
                             <v-list-tile-title v-text="item.name"></v-list-tile-title>
                         </v-list-tile-content>
@@ -35,12 +39,22 @@ export default {
   data () {
     return {
       insert: false,
-      users: [
-        {name: 'Mehmet Akkuş'},
-        {name: 'Ahmet'},
-        {name: 'Ali'},
-        {name: 'Veli'}
-      ]
+      name: ''
+    }
+  },
+  created () {
+    // aslında geliyor ancak actions-loadUser currentUserId 'i alamıyor?
+    // componentler yüklendiğinde customerId alınamıyor çünkü firebase'den önce yükleniyorlar
+    // firebase.auth().currentUser.uid 'ın sorunuda bu aslında id 'yi alıyor ama sayfa ilk yüklendiğinde değil ana instance yüklenip bittikten sonra
+    let classId = this.$route.params.classid
+    this.$store.dispatch('loadUsers', classId)
+  },
+  computed: {
+    loading () {
+      return this.$store.getters.getLoading
+    },
+    getUsers () {
+      return this.$store.getters.loadedUsers
     }
   },
   methods: {
@@ -50,8 +64,17 @@ export default {
     deleteUser () {
       alert('deleted user')
     },
-    changeInsert () {
-      this.insert = true
+    userInsert () {
+      if (this.name === '') {
+        return
+      }
+      let userName = this.name
+      let classId = this.$route.params.classid
+      this.$store.dispatch('insertUser', { classId: classId, name: userName })
+      this.insert = false
+    },
+    back () {
+      this.$router.go(-1)
     }
   }
 }

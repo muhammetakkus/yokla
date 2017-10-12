@@ -10,7 +10,7 @@
                     <v-toolbar-title>SINIFLAR</v-toolbar-title>
                 </v-toolbar>
                 <v-progress-circular indeterminate class="primary--text" :width="7" :size="70" v-if="loading"></v-progress-circular>
-                <v-list>
+                <v-list  v-if="!loading">
                     <v-list-tile v-for="item in classes" v-bind:key="item.name">
                         <v-list-tile-content style="cursor: pointer" @click="goDetailClass(item.id)">
                             <v-list-tile-title v-text="item.name"></v-list-tile-title>
@@ -22,7 +22,7 @@
                             <v-btn flat @click="goDetailClass(item.id)">Yokla</v-btn>
                         </v-list-tile-action>
                         <v-list-tile-action>
-                            <v-btn flat :to="/class-user-list/+item.id">Düzenle</v-btn>
+                            <v-btn flat :to="/class-user-list/+item.id">Kişiler</v-btn>
                         </v-list-tile-action>
                     </v-list-tile>
                 </v-list>
@@ -34,13 +34,13 @@
 <script>
 export default {
   name: 'home',
+  created () {
+    this.$store.dispatch('loadClasses')
+  },
   computed: {
     loading () {
       return this.$store.getters.getLoading
     },
-    /**
-     biliyorsun burada oluşturulan fonk. direk {{ methodName }} şeklinde kullanabliyoruz
-     */
     classes () {
       return this.$store.getters.loadedClasses
     }

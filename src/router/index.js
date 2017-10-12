@@ -8,7 +8,6 @@ import Index from '@/components/Index'
 import Register from '@/components/Customer/Register'
 import Login from '@/components/Customer/Login'
 import Home from '@/components/Customer/Home'
-import Class from '@/components/Customer/Class'
 import Yokla from '@/components/Customer/Yokla'
 import CreateClass from '@/components/Customer/CreateClass'
 import ClassUserList from '@/components/Customer/ClassUserList'
@@ -41,11 +40,6 @@ export default new Router({
       beforeEnter: AuthMiddleware
     },
     {
-      path: '/class/:id',
-      name: 'Class',
-      component: Class
-    },
-    {
       path: '/yokla/:classid',
       name: 'Yokla',
       props: true, // bu sayede $route, parametreleri props olarak componente geçirecek
@@ -67,7 +61,7 @@ export default new Router({
       component: ViewYoklamaHistory
     },
     {
-      path: '/yoklama-detail/:classid/:tarih',
+      path: '/yoklama-detail/:classid/:time',
       name: 'YoklamaDetail',
       component: YoklamaDetail
     }

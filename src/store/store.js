@@ -1,5 +1,6 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
+import moment from 'moment/moment'
 
 import * as firebase from 'firebase'
 
@@ -10,34 +11,33 @@ Vue.use(Vuex)
 export const store = new Vuex.Store({
   state: {
     loadedClasses: [],
-    loadedUsers: [
-      { id: 10, classId: 1, name: 'AHMET' },
-      { id: 11, classId: 1, name: 'MEHMET' },
-      { id: 13, classId: 2, name: 'CEMAL' }
-    ],
+    loadedUsers: [],
     customer: null, // setSession ile customerId set edilir clearSession ile null set edilir
     loading: false,
-    pageLoader: false,
+    pageLoading: false,
     error: null,
-    isAuth: false
+    isAuth: false,
+    auth: false
   },
   actions: {
     loadClasses ({state, commit, dispatch, getters}) {
       store.commit('setLoading', true)
-      firebase.database().ref('/classes').once('value').then(data => {
-        // tüm data -> hash: {data}, hash: {data} şeklinde
-        let database = data.val()
-        let classes = []
-        for (let key in database) {
-          classes.push({
-            id: key,
-            name: database[key].name,
-            created: database[key].created
-          })
-        }
-        store.commit('loadClasses', classes)
-        store.commit('setLoading', false)
-      })
+      let customerId = getters.getCustomerId
+      console.log('loadClasses currentUser.uid => ' + customerId)
+      firebase.database().ref('classes/' + customerId).once('value')
+        .then(data => {
+          let database = data.val()
+          let classes = []
+          for (let key in database) {
+            classes.push({
+              id: key,
+              name: database[key].name,
+              created: database[key].created
+            })
+          }
+          store.commit('loadClasses', classes)
+          store.commit('setLoading', false)
+        })
     },
     // state.loadedClasses' a yeni class datasını push et + firebase insert
     createClass ({state, commit}, data) {
@@ -52,7 +52,7 @@ export const store = new Vuex.Store({
         created: new Date().toISOString()
       }
       // firebase insert
-      firebase.database().ref('classes').push(classData)
+      firebase.database().ref('classes/' + customerId).push(classData)
         .then(data => {
           store.commit('setLoading', false)
           // mutations'daki createClass methoduna classData objesini
@@ -83,12 +83,12 @@ export const store = new Vuex.Store({
         })
     },
     signIn ({commit, dispatch}, customerData) {
+      store.commit('setPageLoading', true)
       firebase.auth().signInWithEmailAndPassword(customerData.email, customerData.password)
         .then(response => {
-          store.commit('setLoading', false)
           store.commit('setSession', response.uid)
           store.commit('clearError')
-          store.dispatch('loadClasses')
+          store.commit('setPageLoading', false)
         })
         .catch(error => {
           // error.code
@@ -98,6 +98,9 @@ export const store = new Vuex.Store({
           console.log(error.code + ': ' + error.message)
         })
     },
+    autoSignIn ({commit}, payload) {
+      store.commit('setSession', payload.uid)
+    },
     signOut () {
       firebase.auth().signOut()
       store.commit('clearSession')
@@ -105,24 +108,83 @@ export const store = new Vuex.Store({
     },
     // Auth varsa id 'yi state'deki customer'a atan, setSession'a id gönder
     isAuth ({commit}) {
-      store.commit('setPageLoader', true)
+      store.commit('setPageLoading', true)
       firebase.auth().onAuthStateChanged(user => {
         if (user) {
           store.commit('setSession', user.uid)
-          store.commit('setPageLoader', false)
+          store.commit('setPageLoading', false)
           console.log('user var')
         } else {
           console.log('user yok')
-          store.commit('setPageLoader', false)
+          store.commit('setPageLoading', false)
           // route home
         }
       })
     },
     clearError ({commit}) {
       store.commit('clearError')
+    },
+    /* User Processes */
+    loadUsers ({commit, getters, state}, payload) {
+      store.commit('setLoading', true)
+      let customerId = getters.getCustomerId
+      let classId = payload
+      firebase.database().ref('/users/' + customerId + '/' + classId).once('value')
+        .then(data => {
+          let databaseVal = data.val()
+          let userData = []
+          for (let key in databaseVal) {
+            userData.push({ name: databaseVal[key].name, id: key })
+          }
+          store.commit('loadUser', userData)
+          store.commit('setLoading', false)
+        })
+    },
+    insertUser ({commit, getters}, payload) {
+      store.commit('setLoading', true)
+      let customerId = getters.getCustomerId
+      let classId = payload.classId
+      let userName = payload.name
+      firebase.database().ref('/users/' + customerId + '/' + classId).push({ name: userName })
+        .then(data => {
+          store.commit('setUser', { name: userName })
+          store.commit('setLoading', false)
+        })
+    },
+    deleteUser ({commit, getters}, payload) {
+      let customerId = getters.getCustomerId
+      let classId = payload.classId
+      let userId = payload.userId
+      let userName = payload.userName
+      firebase.database().ref('/users/' + customerId + '/' + classId + '/' + userId).remove()
+      store.commit('removeUser', userName)
+    },
+    yokla ({commit}, payload) {
+      //
+      let hour = moment().format('LTS').split(' ')
+      let time = moment().format('L').split('/')
+      time = time.join('-')
+      //
+      let now = time + '_' + hour[0]
+      let classId = payload.classId
+      let yoklama = payload.yoklama
+      firebase.database().ref('/yoklama/' + classId + '/' + now).push(yoklama).then(data => {
+        console.log(data)
+      })
+    },
+    /* Yoklama History */
+    viewYoklamaHistory (payload) {
+      let classId = payload.classId
+      firebase.database().ref('/yoklama/' + classId).once('value')
+        .then(data => {
+          console.log(data)
+        })
     }
   },
   mutations: {
+    setAuth (state, value) {
+      state.auth = value
+    },
     createClass (state, data) {
       state.loadedClasses.unshift(data)
     },
@@ -140,8 +202,8 @@ export const store = new Vuex.Store({
     setLoading (state, value) {
       state.loading = value
     },
-    setPageLoader (state, value) {
-      state.pageLoader = value
+    setPageLoading (state, value) {
+      state.pageLoading = value
     },
     setError (state, value) {
       state.error = value
@@ -150,13 +212,27 @@ export const store = new Vuex.Store({
       state.error = null
     },
     loadClasses (state, value) {
+      state.loadedClasses.length = 0
       state.loadedClasses.push(...value)
+    },
+    /* User Processes */
+    loadUser (state, payload) {
+      state.loadedUsers.length = 0
+      state.loadedUsers.push(...payload)
+    },
+    // bu ne için? inser user için?
+    setUser (state, payload) {
+      state.loadedUsers.push(payload)
+    },
+    removeUser (state, payload) {
+      // state.loadedUsers.slice(payload, 1)
+      // state.loadedUsers.name === payload .remove
     }
   },
   getters: {
     /**
-      yukarıdaki state'i alıyor ve
-      içerisindeki değerleri istediğimiz gibi işleyerek return edecek method yazıyoruz.
+     yukarıdaki state'i alıyor ve
+     içerisindeki değerleri istediğimiz gibi işleyerek return edecek method yazıyoruz.
      */
     loadedClasses (state) {
       return state.loadedClasses.sort((firstItem, secondItem) => {
@@ -170,15 +246,16 @@ export const store = new Vuex.Store({
       }) */
     },
     getCustomerId (state) {
-      // if (state.isCustomer()) {
       return state.customer
-      // }
     },
     getError (state) {
       return state.error
     },
     getLoading (state) {
       return state.loading
+    },
+    getPageLoading (state) {
+      return state.pageLoading
     },
     isAuth (state) {
       return state.isAuth
@@ -187,6 +264,9 @@ export const store = new Vuex.Store({
   modules: {
   }
 })
+
+// loadUsers, ClassUserList.vue ve Yokla sayfasında offical olarak koşturulacak
+// YoklamaDetailSayfasında gelen userID ile isim alınacak
 
 /*
   -actions'daki methodlara erişmek için dispatch kullanılır

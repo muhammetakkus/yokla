@@ -1,11 +1,19 @@
 <template>
     <v-container>
+        <!-- Alert Component -->
         <v-layout v-if="error" dense>
             <v-flex xs12 sm6 offset-sm3>
                 <app-alert @dismissed="onDismissed" :text="error"></app-alert>
             </v-flex>
         </v-layout>
-        <v-layout row wrap>
+        <!-- Page Loading -->
+        <v-layout v-if="pageLoading" class="text-xs-center">
+            <v-flex xs12>
+                <v-progress-circular indeterminate class="primary--text text-xs-center" :width="7" :size="70"></v-progress-circular>
+            </v-flex>
+        </v-layout>
+        <!-- Login Form -->
+        <v-layout row wrap v-if="!pageLoading">
             <v-flex xs12 sm6 offset-sm3>
                 <v-form @submit.prevent="login" ref="form">
                     <v-text-field
@@ -35,6 +43,9 @@ export default {
     }
   },
   computed: {
+    pageLoading () {
+      return this.$store.getters.getPageLoading
+    },
     auth () {
       return this.$store.getters.isAuth
     },
