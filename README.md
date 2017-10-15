@@ -1,6 +1,6 @@
 # Yokla
 
-> Yokla is a realtime student checking SPA with Vue + Vuex + Vuetify + Firebase
+> Yokla is a realtime student polling system with Vue + Vuex + Vuetify + Firebase
 
 ## Build Setup
 
