@@ -1,5 +1,6 @@
 <template>
     <v-container>
+        <v-btn @click="back">İPTAL</v-btn>
         <form @submit.prevent="_createClass">
         <v-layout row>
             <v-flex xs12 sm8 offset-sm2>
@@ -134,6 +135,9 @@ export default {
       // reaches out to actions method createClass
       this.$store.dispatch('createClass', classData)
       this.$router.push('/home')
+    },
+    back () {
+      this.$router.go(-1)
     }
   },
   computed: {

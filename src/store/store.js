@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
 import moment from 'moment/moment'
+import router from '../router'
 
 import * as firebase from 'firebase'
 
@@ -13,6 +14,7 @@ export const store = new Vuex.Store({
     loadedClasses: [],
     loadedUsers: [],
     customer: null, // setSession ile customerId set edilir clearSession ile null set edilir
+    kurum_name: '',
     loading: false,
     pageLoading: false,
     error: null,
@@ -65,16 +67,15 @@ export const store = new Vuex.Store({
       firebase.database().ref('classes').remove()
     },
     createCustomer ({commit}, customerData) {
-      // start loading state
       store.commit('setLoading', true)
       firebase.auth().createUserWithEmailAndPassword(customerData.email, customerData.password)
         .then(response => {
-          store.commit('setSession', response.uid)
+          response.updateProfile({
+            displayName: customerData
+          })
+          store.commit('setSession', {id: response.uid, kurum_name: response.displayName})
           store.commit('setLoading', false)
           store.commit('clearError')
-          if (response.uid) {
-            store.commit('setSession', response.uid)
-          }
         })
         .catch(error => {
           store.commit('setLoading', false)
@@ -86,20 +87,20 @@ export const store = new Vuex.Store({
       store.commit('setPageLoading', true)
       firebase.auth().signInWithEmailAndPassword(customerData.email, customerData.password)
         .then(response => {
-          store.commit('setSession', response.uid)
+          store.commit('setSession', {id: response.uid, kurum_name: response.displayName})
           store.commit('clearError')
           store.commit('setPageLoading', false)
         })
         .catch(error => {
           // error.code
           // error.message
-          store.commit('setLoading', false)
+          store.commit('setPageLoading', false)
           store.commit('setError', error.code)
           console.log(error.code + ': ' + error.message)
         })
     },
     autoSignIn ({commit}, payload) {
-      store.commit('setSession', payload.uid)
+      store.commit('setSession', {id: payload.uid, kurum_name: payload.displayName})
     },
     signOut () {
       firebase.auth().signOut()
@@ -111,7 +112,7 @@ export const store = new Vuex.Store({
       store.commit('setPageLoading', true)
       firebase.auth().onAuthStateChanged(user => {
         if (user) {
-          store.commit('setSession', user.uid)
+          store.commit('setSession', {id: user.uid, kurum_name: user.displayName})
           store.commit('setPageLoading', false)
           console.log('user var')
         } else {
@@ -170,15 +171,8 @@ export const store = new Vuex.Store({
       let yoklama = payload.yoklama
       firebase.database().ref('/yoklama/' + classId + '/' + now).push(yoklama).then(data => {
         console.log(data)
+        router.push('/yoklama-detail/' + classId + '/' + now)
       })
-    },
-    /* Yoklama History */
-    viewYoklamaHistory (payload) {
-      let classId = payload.classId
-      firebase.database().ref('/yoklama/' + classId).once('value')
-        .then(data => {
-          console.log(data)
-        })
     }
   },
   mutations: {
@@ -188,8 +182,9 @@ export const store = new Vuex.Store({
     createClass (state, data) {
       state.loadedClasses.unshift(data)
     },
-    setSession (state, customerId) {
-      state.customer = customerId
+    setSession (state, customerData) {
+      state.customer = customerData.id
+      state.kurum_name = customerData.kurum_name
       state.isAuth = true
     },
     clearSession (state) {
@@ -256,6 +251,9 @@ export const store = new Vuex.Store({
     },
     getPageLoading (state) {
       return state.pageLoading
+    },
+    getKurumName (state) {
+      return state.kurum_name
     },
     isAuth (state) {
       return state.isAuth

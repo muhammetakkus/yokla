@@ -1,5 +1,5 @@
 <template>
-  <v-app light>
+  <v-app light style="background: #fff">
     <!-- SIDEBAR -->
     <v-navigation-drawer temporary persistent v-model="drawer" absolute>
       <v-list dense>
@@ -19,7 +19,7 @@
     </v-navigation-drawer>
       
     <!-- NAV -->  
-    <v-toolbar class="white--text amber" dense>
+    <v-toolbar class="white--text pink darken-4" dense>
       <!-- Sicebar Icon -->
       <v-toolbar-side-icon @click.stop="drawer = !drawer" class="hidden-sm-and-up white--text"></v-toolbar-side-icon>
       <v-toolbar-title>
@@ -45,9 +45,7 @@
 
     <!-- MAIN -->
     <main>
-      <v-container fluid>
-        <router-view></router-view>
-      </v-container>
+      <router-view></router-view>
     </main>
 
     <!-- FOOTER -->
