@@ -1,24 +1,5 @@
 <template>
     <v-container fluid>
-        <!-- Edit Modal -->
-        <v-layout row justify-center>
-            <v-dialog v-model="editDialog" persistent>
-                <v-card>
-                    <v-card-title class="headline"><b>{{editClassName}}</b></v-card-title>
-                    <v-card-text>
-                        <v-text-field
-                                label="Yeni Sınıf İsmi"
-                                prepend-icon="home"
-                        ></v-text-field>
-                    </v-card-text>
-                    <v-card-actions>
-                        <v-spacer></v-spacer>
-                        <v-btn class="grey white--text" @click.native="editDialog = false">İptal</v-btn>
-                        <v-btn class="green white--text" @click.native="">DÜZENLE</v-btn>
-                    </v-card-actions>
-                </v-card>
-            </v-dialog>
-        </v-layout>
         <!-- Delete Modal -->
         <v-layout row justify-center>
             <v-dialog v-model="deleteDialog" persistent>
@@ -33,30 +14,27 @@
                 </v-card>
             </v-dialog>
         </v-layout>
-        <!-- Class List -->
+        <!-- Content -->
         <v-layout row>
             <v-flex xs12>
                 <v-btn @click="back">GERİ</v-btn>
                 <v-card class="text-xs-center">
                     <v-toolbar class="white--text indigo" dark dense>
-                        <v-toolbar-title>SINIF YÖNETİMİ</v-toolbar-title>
+                        <v-toolbar-title>YOKLAMA DÖNEMİ BİTEN SINIFLAR</v-toolbar-title>
                     </v-toolbar>
                     <v-progress-circular indeterminate class="primary--text" :width="7" :size="70" v-if="loading"></v-progress-circular>
-                    <v-list  v-if="!loading">
+                    <v-list v-if="!loading">
                         <v-list-tile v-for="item in classes" v-bind:key="item.name">
-                            <v-list-tile-content>
+                            <v-list-tile-content :to="/view-yoklama-history/+item.id">
                                 <v-list-tile-title v-text="item.name"></v-list-tile-title>
                             </v-list-tile-content>
-                            <v-list-tile-action>
-                                <v-btn flat @click="openEditDialog(item.id, item.name)">DÜZENLE</v-btn>
-                            </v-list-tile-action>
                             <v-list-tile-action>
                                 <v-btn flat @click="askDelete(item.id, item.name)">SİL</v-btn>
                             </v-list-tile-action>
                         </v-list-tile>
-                        <!-- -->
-                        <message :message="message" v-if="empty"></message>
                     </v-list>
+                    <!-- -->
+                    <message :message="message" v-if="empty"></message>
                 </v-card>
             </v-flex>
         </v-layout>
@@ -65,47 +43,62 @@
 
 <script>
 import firebase from 'firebase'
+import Time from '@/lib/time'
 export default {
   name: 'home',
   data () {
     return {
+      loading: false,
+      classes: [],
       deleteDialog: false,
-      editDialog: false,
       deleteClassId: '',
       deleteClassName: '',
-      editClassName: '',
-      message: 'Mevcut Bir Sınıf Bulunmamakta',
+      message: 'Dönemi Biten Bir Sınıf Bulunmamakta',
       empty: false
     }
   },
   created () {
-    // burada bütün classlar çekilecek - loadClass ile çekme
-    this.$store.dispatch('loadClasses')
+    /* store.js -> loadClasses ' diziye sınıfları depoluyor burada tekrar firebase.connect yapmayıp store'dan arrayi alabilirsin store managementın mantığı bu */
+    this.loadExpClasses()
   },
   computed: {
-    loading () {
-      return this.$store.getters.getLoading
-    },
-    classes () {
-      //
-      if (this.$store.getters.loadedClasses.length === 0) {
-        this.empty = true
-      } else {
-        this.empty = false
-        return this.$store.getters.loadedClasses
-      }
-    }
   },
   methods: {
+    loadExpClasses () {
+      this.loading = true
+      let customerId = firebase.auth().currentUser.uid
+      firebase.database().ref('classes/' + customerId).once('value')
+        .then(data => {
+          let database = data.val()
+          let classes = []
+          for (let key in database) {
+            // if ( now.en > (finisTime -> convert eng time) )
+            if (new Time().getTimeEN() > new Time().convertTimeEnToTr(database[key].finish_yoklama_date)) {
+              classes.unshift({
+                id: key,
+                name: database[key].name,
+                created: database[key].created
+              })
+            }
+          }
+          this.classes.push(...classes)
+          //
+          if (this.classes.length === 0) {
+            this.empty = true
+          } else {
+            this.empty = false
+          }
+          //
+          this.loading = false
+        })
+    },
+    back () {
+      this.$router.go(-1)
+    },
     askDelete (classId, className) {
       this.deleteDialog = true
       this.deleteClassId = classId
       this.deleteClassName = className
-    },
-    openEditDialog (classId, className) {
-      this.editDialog = true
-      // this.editClassId = classId
-      this.editClassName = className
     },
     deleteClass () {
       this.deleteDialog = false
@@ -113,10 +106,9 @@ export default {
       let classId = this.deleteClassId
       firebase.database().ref('classes/' + currentUserId + '/' + classId).remove()
       firebase.database().ref('yoklama/' + classId).remove()
-      this.$store.dispatch('loadClasses')
-    },
-    back () {
-      this.$router.go(-1)
+      // classes değişkeninde mevcut sınıfları kaldırmazsak diğer silinmemiş sınıfları tekrar push etmiş olur
+      this.classes.length = 0
+      this.loadExpClasses()
     }
   }
 }

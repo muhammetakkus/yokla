@@ -2,7 +2,7 @@
     <v-container fluid>
         <v-layout row>
             <v-flex xs12>
-                <v-btn @click="back">GERİ</v-btn>
+                <v-btn @click="editYoklama" v-if="is_class_active">Düzenle</v-btn>
                 <v-card class="text-xs-center">
                     <v-toolbar class="white--text indigo" dark dense>
                         <v-toolbar-title>{{$route.params.time}} YOKLAMA GEÇMİŞİ</v-toolbar-title>
@@ -32,7 +32,8 @@ export default {
   data () {
     return {
       user: [],
-      loading: false
+      loading: false,
+      is_class_active: true
     }
   },
   created () {
@@ -52,8 +53,10 @@ export default {
     })
   },
   methods: {
-    back () {
-      this.$router.go(-1)
+    editYoklama () {
+      let classId = this.$route.params.classid
+      let time = this.$route.params.time
+      this.$router.push('/yoklama-edit/' + classId + '/' + time)
     }
   }
 }

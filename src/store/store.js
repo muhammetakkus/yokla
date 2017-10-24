@@ -2,6 +2,7 @@ import Vue from 'vue'
 import Vuex from 'vuex'
 import moment from 'moment/moment'
 import router from '../router'
+import Time from '@/lib/time'
 
 import * as firebase from 'firebase'
 
@@ -25,40 +26,65 @@ export const store = new Vuex.Store({
     loadClasses ({state, commit, dispatch, getters}) {
       store.commit('setLoading', true)
       let customerId = getters.getCustomerId
-      console.log('loadClasses currentUser.uid => ' + customerId)
+      // let toDay = new Date().getDate()
       firebase.database().ref('classes/' + customerId).once('value')
         .then(data => {
           let database = data.val()
           let classes = []
           for (let key in database) {
-            classes.push({
-              id: key,
-              name: database[key].name,
-              created: database[key].created
-            })
+            // if ((finisTime -> converted eng time) > now)
+            if (new Time().convertTimeEnToTr(database[key].finish_yoklama_date) >= new Time().getTimeEN()) {
+              // yoklama alma saatleri getTime'a çevrilip şu anki saat-dakika ile compare edilebiliyor new Date(date time).getTime()
+              // sadece saat bazında mukayese için hepsi için güncel tarih veriliyor new Time().getTimeEN()
+              let start = new Date(new Time().getTimeEN() + ' ' + database[key].starting_yoklama_time).getTime()
+              let now = new Date(new Time().getTimeEN() + ' ' + new Time().getHourAndMin()).getTime()
+              let finish = new Date(new Time().getTimeEN() + ' ' + database[key].finish_yoklama_time).getTime()
+              let thisDay = new Date().getDay()
+              let yoklamaStatus = false
+              if (
+                // && database[key].availableDates.includes(toDay)
+                finish >= now && now >= start && database[key].availableDates.includes(thisDay)
+              ) {
+                yoklamaStatus = true
+                console.log('gotcha')
+              }
+              // console.log(database[key].finish_yoklama_time)
+              // console.log(database[key].availableDates)
+              console.log(finish)
+              console.log(now)
+              console.log(start)
+              classes.push({
+                id: key,
+                name: database[key].name,
+                created: database[key].created,
+                is_active: yoklamaStatus
+              })
+            }
           }
+          console.log(classes)
           store.commit('loadClasses', classes)
           store.commit('setLoading', false)
         })
     },
     // state.loadedClasses' a yeni class datasını push et + firebase insert
     createClass ({state, commit}, data) {
-      // start loading
       store.commit('setLoading', true)
-      // get current customer ID
       let customerId = store.getters.getCustomerId
       // class data
       const classData = {
         customerId: customerId,
         name: data.className,
+        starting_yoklama_date: data.startingDate,
+        finish_yoklama_date: data.finishDate,
+        starting_yoklama_time: data.startingTime,
+        finish_yoklama_time: data.finishTime,
+        availableDates: data.availableDates,
         created: new Date().toISOString()
       }
       // firebase insert
       firebase.database().ref('classes/' + customerId).push(classData)
         .then(data => {
           store.commit('setLoading', false)
-          // mutations'daki createClass methoduna classData objesini
-          // key: value şeklinde gönder[spread] yanına id: 'yide ekle gönder
           store.commit('createClass', {...classData, id: data.key})
         })
         .catch(error => console.log(error.code + ' => ' + error.message))

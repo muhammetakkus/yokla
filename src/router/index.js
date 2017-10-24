@@ -13,7 +13,9 @@ import CreateClass from '@/components/Customer/CreateClass'
 import ClassUserList from '@/components/Customer/ClassUserList'
 import ViewYoklamaHistory from '@/components/Customer/ViewYoklamaHistory'
 import YoklamaDetail from '@/components/Customer/YoklamaDetail'
+import YoklamaEdit from '@/components/Customer/YoklamaEdit'
 import ClassManagement from '@/components/Customer/ClassManagement'
+import ExpiredClasses from '@/components/Customer/ExpiredClasses'
 
 import AuthMiddleware from './auth-middleware'
 
@@ -67,9 +69,19 @@ export default new Router({
       component: YoklamaDetail
     },
     {
+      path: '/yoklama-edit/:classid/:time',
+      name: 'YoklamaEdit',
+      component: YoklamaEdit
+    },
+    {
       path: '/class-management',
       name: 'ClassManagement',
       component: ClassManagement
+    },
+    {
+      path: '/expired-classes',
+      name: 'ExpiredClasses',
+      component: ExpiredClasses
     }
   ],
   mode: 'history'

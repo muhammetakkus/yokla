@@ -11,6 +11,10 @@ import {store} from './store/store'
 import Alert from './components/Shared/Alert'
 Vue.component('app-alert', Alert)
 
+/* listelendiğinde boş vs gibi mesajlar için component */
+import Message from './components/Shared/ValidMessage.vue'
+Vue.component('message', Message)
+
 Vue.use(Vuetify)
 Vue.config.productionTip = false
 

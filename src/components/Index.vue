@@ -104,25 +104,24 @@
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-    /* - sınıf oluştururken önce ay-yıl olarak yoklama alma aralığı seçilsin - */
-    /* - checkbox ile günler seçilsin - */
-    /* - seçilen gün için saat başlangıç-bitiş ayarı yapılsın - */
-    /* - db'ye bu ay-yıl, gün aralığı, saat aralığı nasıl kaydedilecek? - */
-    /* - yeni dönem için alınacak yoklama durumu nasıl olacak? bu sınıfa artık ihtiyaç yoksa? - */
-    /* - yoklama alma kapsamında olmayan sınıflar pasif sınıflar sekmesinde olsun home'da sadece aktif sınıflar olsa? - */
-    /* - yokalama başlama/bitiş tarihinden yıl o sınıf için dönem tarihi olacak - */
-    /* - oluşturulan sınıflar şu şekilde olsa ATL-12-A-2017-2018 dönem süresi biten bu şekilde home'dan kalkıp arşivlensin ATL-12-A-2018-2019 için yeni sınıf oluşturulsun - */
-    /* TARİH YAPILANDIRMASI YAPILACAK - TARİHLERİN DÜZGÜN GÖSTERİMİ */
-    /* SINIFLARIN BELLİ GÜN-TARİH-SAAT İÇERİSİNDE YOKLAMA ALINABİLİR OLMASI */
-
+    /* yokla sayfasındaki get işlemini methodlaştır - empty message ekle */
+    /* bütün delete-update işlemlerini tamamla */
+    /* create classta tarih-saat-gün boş bırakılamaz olsun */
+    /* - yokalama başlama/bitiş tarihinden yıl/ay o sınıf için dönem tarihi olacak ATL-12-A-2017-2018 - */
     /* YokalmaDetail SAYFASI İÇİN DÜZENLE SEÇENEĞİ - EĞER O SINIF İÇİN YOKLAMA ALMA ENABLE İSE */
     /* YOKLA sayfasının label-checkbox css 'i yazılacak */
+    /* eğer öğrenci-class-yoklama_geçmişi vs listelenecek bir şey yok ise ilgili mesaj basılsın */
     /* deployment */
 
+    /* DİĞER SAYFALARIN LOGİN-REGİSTER redirectleri yapılacak */
     /* YOKLAMA GEÇMİŞİ HAFTALIK-AYLIK GRAFİKSEL GÖSTERİMİ + GRUP BAZINDA-KİŞİ BAZINDA -chart library kullanılacak */
     /* KULLANICI GİRİŞİ - SADECE KİŞİ BAZINDA KENDİ GRAFİĞİNİ GÖRÜR */
+    /* - seçilen gün için saat başlangıç-bitiş ayarı yapılsın - */
     /* VAR-YOK +İZİNLİ? */
     /* clean code */
+
+    /* 00:00 bitiş olarak ayarlandığında 23:59:59 bügünden 00:00 diğer günden sayıyor */
+    /* sınıf oluşturulduğunda anasayfaya yönlenince sınıfı deactive gösteriyor sayfa yenilenince active görünüyor? */
 
     /* docker-compose.yml dosyasında image olarak klasördeki Dockerfile gösterirsen o image için özel ayarlar yapabilirsin */
 </style>

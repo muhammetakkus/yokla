@@ -28,6 +28,8 @@
                                 <v-btn flat @click="deleteUser">SİL</v-btn>
                             </v-avatar>
                         </v-list-tile>
+                        <!-- -->
+                        <message :message="message" v-if="empty"></message>
                     </v-list>
                 </v-card>
             </v-flex>
@@ -41,7 +43,9 @@ export default {
   data () {
     return {
       insert: false,
-      name: ''
+      name: '',
+      message: 'Bu Sınıfa Ait Bir Kayıt Bulunmamakta',
+      empty: false
     }
   },
   created () {
@@ -56,7 +60,12 @@ export default {
       return this.$store.getters.getLoading
     },
     getUsers () {
-      return this.$store.getters.loadedUsers
+      if (this.$store.getters.loadedUsers.length === 0) {
+        this.empty = true
+      } else {
+        this.empty = false
+        return this.$store.getters.loadedUsers
+      }
     }
   },
   methods: {
@@ -73,6 +82,7 @@ export default {
       let userName = this.name
       let classId = this.$route.params.classid
       this.$store.dispatch('insertUser', { classId: classId, name: userName })
+      this.name = ''
       this.insert = false
     },
     back () {
