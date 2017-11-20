@@ -1,6 +1,5 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
-import moment from 'moment/moment'
 import router from '../router'
 import Time from '@/lib/time'
 
@@ -180,11 +179,12 @@ export const store = new Vuex.Store({
     },
     yokla ({commit}, payload) {
       //
-      let hour = moment().format('LTS').split(' ')
-      let time = moment().format('L').split('/')
-      time = time.join('-')
+      let hour = new Time().getHourAndMinAndSec()
+      let time = new Time().getTimeTR()
+      // hour = 12:49:30
+      // time = AY-GÜN-2017
       //
-      let now = time + '_' + hour[0]
+      let now = time + '_' + hour
       let classId = payload.classId
       let yoklama = payload.yoklama
       firebase.database().ref('/yoklama/' + classId + '/' + now).push(yoklama).then(data => {

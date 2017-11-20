@@ -104,6 +104,9 @@
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
+    /* run -> npm update */
+    /* run -> git add + commit + push */
+    /* --- -> firebase deployment */
     /* - yokalama başlama/bitiş tarihinden yıl/ay o sınıf için dönem tarihi olacak ATL-12-A-2017-2018 - */
     /* YokalmaDetail SAYFASI İÇİN DÜZENLE SEÇENEĞİ - EĞER O SINIF İÇİN YOKLAMA ALMA ENABLE İSE */
     /* YOKLA sayfasının label-checkbox css 'i yazılacak */

@@ -26,6 +26,9 @@ export default class Time {
   getHourAndMin () {
     return this.hour + ':' + this.min
   }
+  getHourAndMinAndSec () {
+    return this.hour + ':' + this.min + ':' + this.sec
+  }
   // gelen format tr ise en, en ise tr yapar
   convertTimeEnToTr (time) {
     this.time = time.split('-')
