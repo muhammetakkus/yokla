@@ -27,17 +27,22 @@
 
 <script>
 import firebase from 'firebase'
+import Time from '@/lib/time'
 export default {
   name: 'YoklamaDetail',
   data () {
     return {
       user: [],
       loading: false,
-      is_class_active: true
+      is_class_active: false
     }
   },
   created () {
+    //
     this.loading = true
+    //
+    this.isClassAvailable()
+    //
     let classId = this.$route.params.classid
     let time = this.$route.params.time
     firebase.database().ref('yoklama/' + classId + '/' + time).once('value').then(data => {
@@ -57,6 +62,22 @@ export default {
       let classId = this.$route.params.classid
       let time = this.$route.params.time
       this.$router.push('/yoklama-edit/' + classId + '/' + time)
+    },
+    isClassAvailable () {
+      let userId = firebase.auth().currentUser.uid
+      let classId = this.$route.params.classid
+      firebase.database().ref('classes/' + userId + '/' + classId).once('value').then(data => {
+        let database = data.val()
+        let start = new Date(new Time().getTimeEN() + ' ' + database.starting_yoklama_time).getTime()
+        let now = new Date(new Time().getTimeEN() + ' ' + new Time().getHourAndMin()).getTime()
+        let finish = new Date(new Time().getTimeEN() + ' ' + database.finish_yoklama_time).getTime()
+        let thisDay = new Date().getDay()
+        if (
+        finish >= now && now >= start && database.availableDates.includes(thisDay)
+        ) {
+          this.is_class_active = true
+        }
+      })
     }
   }
 }

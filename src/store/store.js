@@ -48,11 +48,6 @@ export const store = new Vuex.Store({
                 yoklamaStatus = true
                 console.log('gotcha')
               }
-              // console.log(database[key].finish_yoklama_time)
-              // console.log(database[key].availableDates)
-              console.log(finish)
-              console.log(now)
-              console.log(start)
               classes.push({
                 id: key,
                 name: database[key].name,
@@ -61,7 +56,6 @@ export const store = new Vuex.Store({
               })
             }
           }
-          console.log(classes)
           store.commit('loadClasses', classes)
           store.commit('setLoading', false)
         })
@@ -182,9 +176,7 @@ export const store = new Vuex.Store({
       let customerId = getters.getCustomerId
       let classId = payload.classId
       let userId = payload.userId
-      let userName = payload.userName
       firebase.database().ref('/users/' + customerId + '/' + classId + '/' + userId).remove()
-      store.commit('removeUser', userName)
     },
     yokla ({commit}, payload) {
       //
@@ -244,10 +236,6 @@ export const store = new Vuex.Store({
     // bu ne için? inser user için?
     setUser (state, payload) {
       state.loadedUsers.push(payload)
-    },
-    removeUser (state, payload) {
-      // state.loadedUsers.slice(payload, 1)
-      // state.loadedUsers.name === payload .remove
     }
   },
   getters: {

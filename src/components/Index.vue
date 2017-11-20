@@ -104,16 +104,13 @@
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-    /* yokla sayfasındaki get işlemini methodlaştır - empty message ekle */
-    /* bütün delete-update işlemlerini tamamla */
-    /* create classta tarih-saat-gün boş bırakılamaz olsun */
     /* - yokalama başlama/bitiş tarihinden yıl/ay o sınıf için dönem tarihi olacak ATL-12-A-2017-2018 - */
     /* YokalmaDetail SAYFASI İÇİN DÜZENLE SEÇENEĞİ - EĞER O SINIF İÇİN YOKLAMA ALMA ENABLE İSE */
     /* YOKLA sayfasının label-checkbox css 'i yazılacak */
-    /* eğer öğrenci-class-yoklama_geçmişi vs listelenecek bir şey yok ise ilgili mesaj basılsın */
     /* deployment */
 
     /* DİĞER SAYFALARIN LOGİN-REGİSTER redirectleri yapılacak */
+    /* sınıf ismine tıklanıp yokla sayfasına gittiğinde de önce isClassAilable kontrolü yap != ise home'a yönlensin */
     /* YOKLAMA GEÇMİŞİ HAFTALIK-AYLIK GRAFİKSEL GÖSTERİMİ + GRUP BAZINDA-KİŞİ BAZINDA -chart library kullanılacak */
     /* KULLANICI GİRİŞİ - SADECE KİŞİ BAZINDA KENDİ GRAFİĞİNİ GÖRÜR */
     /* - seçilen gün için saat başlangıç-bitiş ayarı yapılsın - */

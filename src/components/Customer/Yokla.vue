@@ -10,7 +10,7 @@
 
                     <v-progress-circular indeterminate class="primary--text text-sm-center" :width="7" :size="70" v-if="loading"></v-progress-circular>
 
-                    <v-list>
+                    <v-list v-if="!empty && !loading">
                         <v-list-tile v-for="item in getUsers" :key="item.id">
                             <v-list-tile-content>
                                 <v-list-tile-title v-text="item.name"></v-list-tile-title>
@@ -24,6 +24,8 @@
 
                         <v-btn outline class="indigo--text" @click.native="yokla">YOKLA</v-btn>
                     </v-list>
+                    <!-- -->
+                    <message :message="message" v-if="empty"></message>
                 </v-card>
             </v-flex>
         </v-layout>
@@ -31,49 +33,63 @@
 </template>
 
 <script>
-import firebase from 'firebase'
-export default {
-  name: 'yokla',
-  props: ['classid'],
-  data () {
-    return {
-      check: {},
-      getUsers: [],
-      loading: false
-    }
-  },
-  created () {
-    this.loading = true
-    let classId = this.$route.params.classid
-    let customerId = this.$store.getters.getCustomerId
-    firebase.database().ref('/users/' + customerId + '/' + classId).once('value')
-      .then(data => {
-        let databaseVal = data.val()
-        for (let key in databaseVal) {
-          this.getUsers.push({ name: databaseVal[key].name, id: key })
-        }
-        // tüm isimlere checkbox için false ata {"x": false, "y": false}
-        for (let key in this.getUsers) {
-          this.check[this.getUsers[key].name] = false
-        }
-        this.loading = false
-      })
-  },
-  methods: {
-    yokla () {
-      let yoklamaData = { classId: this.$route.params.classid, yoklama: this.check }
-      this.$store.dispatch('yokla', yoklamaData)
+  import firebase from 'firebase'
+  export default {
+    name: 'yokla',
+    props: ['classid'],
+    data () {
+      return {
+        check: {},
+        getUsers: [],
+        loading: false,
+        empty: false,
+        message: 'Bu Sınıfa Ait Bir Kayıt Bulunmamakta'
+      }
     },
-    back () {
-      this.$router.go(-1)
+    created () {
+      this.getUser()
+    },
+    methods: {
+      getUser () {
+        this.loading = true
+        let classId = this.$route.params.classid
+        let customerId = this.$store.getters.getCustomerId
+        firebase.database().ref('/users/' + customerId + '/' + classId).once('value')
+          .then(data => {
+            //
+            let databaseVal = data.val()
+            //
+            for (let key in databaseVal) {
+              this.getUsers.push({ name: databaseVal[key].name, id: key })
+            }
+            // tüm isimlere checkbox için false ata {"x": false, "y": false}
+            for (let key in this.getUsers) {
+              this.check[this.getUsers[key].name] = false
+            }
+            //
+            if (this.getUsers.length === 0) {
+              this.empty = true
+            } else {
+              this.empty = false
+            }
+            //
+            this.loading = false
+          })
+      },
+      yokla () {
+        let yoklamaData = { classId: this.$route.params.classid, yoklama: this.check }
+        this.$store.dispatch('yokla', yoklamaData)
+      },
+      back () {
+        this.$router.go(-1)
+      }
     }
   }
-}
 </script>
 
 <style scoped>
     label#checkbox {
-        
+
     }
     input[type="checkbox"] {
 

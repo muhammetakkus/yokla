@@ -1,6 +1,19 @@
 <template>
     <v-container>
         <v-btn @click="back">İPTAL</v-btn>
+        <!-- Delete Modal -->
+        <v-layout row justify-center>
+            <v-dialog v-model="alert" persistent>
+                <v-card>
+                    <v-card-title class="headline red--text"><b>{{alertMessage}}</b></v-card-title>
+                    <v-card-actions>
+                        <v-spacer></v-spacer>
+                        <v-btn class="grey white--text" @click.native="alert = false">Tamam</v-btn>
+                    </v-card-actions>
+                </v-card>
+            </v-dialog>
+        </v-layout>
+        <!-- -->
         <form @submit.prevent="_createClass">
         <v-layout row>
             <v-flex xs12 sm8 offset-sm2>
@@ -59,23 +72,7 @@
         <v-layout row>
             <!-- Start Time -->
             <v-flex xs12 sm6>
-                <v-dialog persistent lazy>
-                    <v-text-field
-                            slot="activator"
-                            label="Başlangıç Saati"
-                            prepend-icon="access_time"
-                            v-model="startingTime"
-                            readonly
-                    ></v-text-field>
-                    <v-time-picker v-model="startingTime" actions format="24hr">
-                        <template scope="{ save, cancel }">
-                            <v-card-actions>
-                                <v-btn flat primary @click.native="cancel()">İptal</v-btn>
-                                <v-btn flat primary @click.native="save()">Kaydet</v-btn>
-                            </v-card-actions>
-                        </template>
-                    </v-time-picker>
-                </v-dialog>
+                <vue-timepicker></vue-timepicker>
             </v-flex>
             <!-- ./ Start Time -->
             <!-- End Time -->
@@ -131,10 +128,14 @@
 
 <script>
 import Time from '@/lib/time'
+import VueTimepicker from 'vue2-timepicker'
+import VAlert from '../../../node_modules/vuetify/src/components/VAlert/VAlert.vue'
 export default {
+  components: {VAlert, VueTimepicker},
   name: 'CreateClass',
   data () {
     return {
+      modal2: false,
       className: '',
       startingDate: '',
       finishDate: '',
@@ -143,7 +144,9 @@ export default {
       allowedDates: [],
       days: ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'],
       selectedDays: [],
-      availableDates: []
+      availableDates: [],
+      alert: false,
+      alertMessage: ''
     }
   },
   created () {
@@ -159,6 +162,18 @@ export default {
     _createClass () {
       //
       if (!this.isAuth) {
+        return
+      }
+      //
+      if (!this.isSelectedDay) {
+        this.alert = true
+        this.alertMessage = 'Lütfen Yoklama Günü Seçiniz'
+        return
+      }
+      //
+      if (new Time().convertTimeEnToTr(this.finishDate) < new Time().getTimeEN()) {
+        this.alert = true
+        this.alertMessage = 'Yoklama Bitişi Gelecek Bir Tarih Olmalı!'
         return
       }
       //
@@ -213,6 +228,9 @@ export default {
     },
     isAuth () {
       return this.$store.getters.isAuth
+    },
+    isSelectedDay () {
+      return this.selectedDays.length !== 0
     }
   }
 }

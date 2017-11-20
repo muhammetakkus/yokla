@@ -1,5 +1,25 @@
 <template>
     <v-container fluid>
+        <!-- Edit Modal -->
+        <v-layout row justify-center>
+            <v-dialog v-model="editDialog" persistent>
+                <v-card>
+                    <v-card-title class="headline"><b>{{userName}}</b></v-card-title>
+                    <v-card-text>
+                        <v-text-field
+                                label="Yeni İsim"
+                                prepend-icon="account_circle"
+                                v-model="newName"
+                        ></v-text-field>
+                    </v-card-text>
+                    <v-card-actions>
+                        <v-spacer></v-spacer>
+                        <v-btn class="grey white--text" @click.native="editDialog = false">İptal</v-btn>
+                        <v-btn class="green white--text" @click.native="editUser">DÜZENLE</v-btn>
+                    </v-card-actions>
+                </v-card>
+            </v-dialog>
+        </v-layout>
         <v-layout row>
             <v-flex xs12>
                 <v-btn @click="back">GERİ</v-btn>
@@ -19,17 +39,17 @@
                     </v-toolbar>
                     <v-list class="text-xs-center">
                         <v-progress-circular indeterminate class="primary--text text-sm-center" :width="7" :size="70" v-if="loading"></v-progress-circular>
-                        <v-list-tile avatar v-for="item in getUsers" v-bind:key="item.name" @click="" v-if="!loading">
+                        <v-list-tile avatar v-for="item in getUsers" v-bind:key="item.id" @click="" v-if="!loading">
                             <v-list-tile-content>
                                 <v-list-tile-title v-text="item.name"></v-list-tile-title>
                             </v-list-tile-content>
                             <v-avatar>
-                                <v-btn flat @click="editUser">DÜZENLE</v-btn>
-                                <v-btn flat @click="deleteUser">SİL</v-btn>
+                                <v-btn flat @click="openEditDialog(item.name, item.id)">DÜZENLE</v-btn>
+                                <v-btn flat @click="deleteUser(item.name, item.id)">SİL</v-btn>
                             </v-avatar>
                         </v-list-tile>
                         <!-- -->
-                        <message :message="message" v-if="empty"></message>
+                        <message :message="message" v-if="empty && !loading"></message>
                     </v-list>
                 </v-card>
             </v-flex>
@@ -38,12 +58,17 @@
 </template>
 
 <script>
+// import firebase from 'firebase'
 export default {
   name: 'ClassUserList',
   data () {
     return {
       insert: false,
+      editDialog: false,
+      userName: '',
       name: '',
+      userId: '',
+      newName: '',
       message: 'Bu Sınıfa Ait Bir Kayıt Bulunmamakta',
       empty: false
     }
@@ -69,11 +94,23 @@ export default {
     }
   },
   methods: {
-    editUser () {
-      alert('edited user')
+    openEditDialog (name, id) {
+      this.editDialog = true
+      this.userName = name
+      this.userId = id
     },
-    deleteUser () {
-      alert('deleted user')
+    editUser () {
+      if (this.newName === '') {
+        return
+      }
+      this.editDialog = false
+      // firebase.database().ref('classes/' + currentUserId + '/' + classId).update({name: this.newName})
+    },
+    deleteUser (name, id) {
+      let classId = this.$route.params.classid
+      this.$store.dispatch('deleteUser', {userName: name, userId: id, classId: classId})
+      this.$store.dispatch('loadUsers', classId)
+      // silme işleminde problem var
     },
     userInsert () {
       if (this.name === '') {

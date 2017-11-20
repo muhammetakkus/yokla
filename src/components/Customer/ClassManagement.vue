@@ -4,17 +4,18 @@
         <v-layout row justify-center>
             <v-dialog v-model="editDialog" persistent>
                 <v-card>
-                    <v-card-title class="headline"><b>{{editClassName}}</b></v-card-title>
+                    <v-card-title class="headline"><b>{{className}}</b></v-card-title>
                     <v-card-text>
                         <v-text-field
                                 label="Yeni Sınıf İsmi"
                                 prepend-icon="home"
+                                v-model="newClassName"
                         ></v-text-field>
                     </v-card-text>
                     <v-card-actions>
                         <v-spacer></v-spacer>
                         <v-btn class="grey white--text" @click.native="editDialog = false">İptal</v-btn>
-                        <v-btn class="green white--text" @click.native="">DÜZENLE</v-btn>
+                        <v-btn class="green white--text" @click.native="updateClassName">DÜZENLE</v-btn>
                     </v-card-actions>
                 </v-card>
             </v-dialog>
@@ -23,7 +24,7 @@
         <v-layout row justify-center>
             <v-dialog v-model="deleteDialog" persistent>
                 <v-card>
-                    <v-card-title class="headline"><b>{{deleteClassName}}</b> Sınıfını Silmek İstiyor musunuz?</v-card-title>
+                    <v-card-title class="headline"><b>{{className}}</b> Sınıfını Silmek İstiyor musunuz?</v-card-title>
                     <v-card-text>Bu sınıf ile beraber bu sınıfa ait bütün yoklama kayıtları geri dönüşümsüz bir şekilde silinecektir.</v-card-text>
                     <v-card-actions>
                         <v-spacer></v-spacer>
@@ -71,9 +72,9 @@ export default {
     return {
       deleteDialog: false,
       editDialog: false,
-      deleteClassId: '',
-      deleteClassName: '',
-      editClassName: '',
+      classId: '', // temporary
+      className: '', // temporary,
+      newClassName: '',
       message: 'Mevcut Bir Sınıf Bulunmamakta',
       empty: false
     }
@@ -99,21 +100,29 @@ export default {
   methods: {
     askDelete (classId, className) {
       this.deleteDialog = true
-      this.deleteClassId = classId
-      this.deleteClassName = className
-    },
-    openEditDialog (classId, className) {
-      this.editDialog = true
-      // this.editClassId = classId
-      this.editClassName = className
+      this.classId = classId
+      this.className = className
     },
     deleteClass () {
       this.deleteDialog = false
       let currentUserId = firebase.auth().currentUser.uid
-      let classId = this.deleteClassId
+      let classId = this.classId
       firebase.database().ref('classes/' + currentUserId + '/' + classId).remove()
       firebase.database().ref('yoklama/' + classId).remove()
       this.$store.dispatch('loadClasses')
+    },
+    openEditDialog (classId, className) {
+      this.editDialog = true
+      this.classId = classId
+      this.className = className
+    },
+    updateClassName () {
+      this.editDialog = false
+      let currentUserId = firebase.auth().currentUser.uid
+      let classId = this.classId
+      firebase.database().ref('classes/' + currentUserId + '/' + classId).update({name: this.newClassName})
+      this.$store.dispatch('loadClasses')
+      this.newClassName = ''
     },
     back () {
       this.$router.go(-1)
