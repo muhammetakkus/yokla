@@ -1,11 +1,22 @@
 import Vue from 'vue'
-import Vuetify from 'vuetify'
 import './stylus/main.styl'
 import App from './App'
 import router from './router' // auto index isimli dosyayı çekiyor sanırım
 
+/* Vuetify */
+import Vuetify from 'vuetify'
+Vue.use(Vuetify)
+
+/* Firebase */
 import * as firebase from 'firebase'
+
+/* Vuex */
 import {store} from './store/store'
+
+// Chart
+// import 'chart.js'
+// import 'hchs-vue-charts'
+// Vue.use(window.VueCharts)
 
 /* Hata Mesajı Component Olarak Tanımlanıp Ana Instance Geçildi - Bütün Componentlerde Kullanılabilir */
 import Alert from './components/Shared/Alert'
@@ -15,7 +26,6 @@ Vue.component('app-alert', Alert)
 import Message from './components/Shared/ValidMessage.vue'
 Vue.component('message', Message)
 
-Vue.use(Vuetify)
 Vue.config.productionTip = false
 
 /* eslint-disable no-new */
@@ -36,6 +46,9 @@ new Vue({
     firebase.auth().onAuthStateChanged(customer => {
       if (customer) {
         this.$store.dispatch('autoSignIn', customer)
+      } else {
+        this.$router.push('/login')
+        console.log('00000login')
       }
     })
     // uygulama reload olduğunda auth var mı yok mu diye bakar varsa setSession yapar

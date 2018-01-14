@@ -1,6 +1,5 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
-import router from '../router'
 import Time from '@/lib/time'
 
 import * as firebase from 'firebase'
@@ -12,6 +11,7 @@ Vue.use(Vuex)
 export const store = new Vuex.Store({
   state: {
     loadedClasses: [],
+    allClasses: [],
     loadedUsers: [],
     customer: null, // setSession ile customerId set edilir clearSession ile null set edilir
     kurum_name: '',
@@ -19,18 +19,29 @@ export const store = new Vuex.Store({
     pageLoading: false,
     error: null,
     isAuth: false,
-    auth: false
+    auth: false,
+    // Raporlanacak Classların Tutulduğu Array
+    classRapor: {},
+    checkedClassNamesForRapor: []
   },
   actions: {
     loadClasses ({state, commit, dispatch, getters}) {
+      console.log('loadClasses runned')
       store.commit('setLoading', true)
       let customerId = getters.getCustomerId
+      state.allClasses.length = 0
       // let toDay = new Date().getDate()
       firebase.database().ref('classes/' + customerId).once('value')
         .then(data => {
           let database = data.val()
           let classes = []
           for (let key in database) {
+            // bütün sınıfların bulunduğu bir class'ın olsun
+            state.allClasses.push({
+              id: key,
+              name: database[key].name,
+              created: database[key].created
+            })
             // if ((finisTime -> converted eng time) > now)
             if (new Time().convertTimeEnToTr(database[key].finish_yoklama_date) >= new Time().getTimeEN()) {
               // yoklama alma saatleri getTime'a çevrilip şu anki saat-dakika ile compare edilebiliyor new Date(date time).getTime()
@@ -59,64 +70,17 @@ export const store = new Vuex.Store({
           store.commit('setLoading', false)
         })
     },
-    // state.loadedClasses' a yeni class datasını push et + firebase insert
-    createClass ({state, commit}, data) {
-      store.commit('setLoading', true)
-      let customerId = store.getters.getCustomerId
-      // class data
-      const classData = {
-        customerId: customerId,
-        name: data.className,
-        starting_yoklama_date: data.startingDate,
-        finish_yoklama_date: data.finishDate,
-        starting_yoklama_time: data.startingTime,
-        finish_yoklama_time: data.finishTime,
-        availableDates: data.availableDates,
-        created: new Date().toISOString()
-      }
-      // firebase insert
-      firebase.database().ref('classes/' + customerId).push(classData)
-        .then(data => {
-          store.commit('setLoading', false)
-          store.commit('createClass', {...classData, id: data.key})
-        })
-        .catch(error => console.log(error.code + ' => ' + error.message))
+    setSession ({commit}, payload) {
+      store.commit('setSession', payload)
     },
-    deleteClass () {
-      firebase.database().ref('classes').remove()
+    setPageLoading ({commit}, payload) {
+      store.commit('setPageLoading', payload)
     },
-    createCustomer ({commit}, customerData) {
-      store.commit('setLoading', true)
-      firebase.auth().createUserWithEmailAndPassword(customerData.email, customerData.password)
-        .then(response => {
-          response.updateProfile({
-            displayName: customerData
-          })
-          store.commit('setSession', {id: response.uid, kurum_name: response.displayName})
-          store.commit('setLoading', false)
-          store.commit('clearError')
-        })
-        .catch(error => {
-          store.commit('setLoading', false)
-          store.commit('setError', error.code)
-          console.log(error)
-        })
+    setError ({commit}, payload) {
+      store.commit('setError', payload)
     },
-    signIn ({commit, dispatch}, customerData) {
-      store.commit('setPageLoading', true)
-      firebase.auth().signInWithEmailAndPassword(customerData.email, customerData.password)
-        .then(response => {
-          store.commit('setSession', {id: response.uid, kurum_name: response.displayName})
-          store.commit('clearError')
-          store.commit('setPageLoading', false)
-        })
-        .catch(error => {
-          // error.code
-          // error.message
-          store.commit('setPageLoading', false)
-          store.commit('setError', error.code)
-          console.log(error.code + ': ' + error.message)
-        })
+    setUser ({commit}, payload) {
+      store.commit('setUser', payload)
     },
     autoSignIn ({commit}, payload) {
       store.commit('setSession', {id: payload.uid, kurum_name: payload.displayName})
@@ -133,7 +97,6 @@ export const store = new Vuex.Store({
         if (user) {
           store.commit('setSession', {id: user.uid, kurum_name: user.displayName})
           store.commit('setPageLoading', false)
-          console.log('user var')
         } else {
           console.log('user yok')
           store.commit('setPageLoading', false)
@@ -160,46 +123,20 @@ export const store = new Vuex.Store({
           store.commit('setLoading', false)
         })
     },
-    insertUser ({commit, getters}, payload) {
-      store.commit('setLoading', true)
-      let customerId = getters.getCustomerId
-      let classId = payload.classId
-      let userName = payload.name
-      firebase.database().ref('/users/' + customerId + '/' + classId).push({ name: userName })
-        .then(data => {
-          store.commit('setUser', { name: userName })
-          store.commit('setLoading', false)
-        })
+    // Rapor sayfasında yoklama için seçilen classlar
+    classForRapor ({state}, payload) {
+      state.classRapor = payload
     },
-    deleteUser ({commit, getters}, payload) {
-      let customerId = getters.getCustomerId
-      let classId = payload.classId
-      let userId = payload.userId
-      firebase.database().ref('/users/' + customerId + '/' + classId + '/' + userId).remove()
-    },
-    yokla ({commit}, payload) {
-      //
-      let hour = new Time().getHourAndMinAndSec()
-      let time = new Time().getTimeTR()
-      // hour = 12:49:30
-      // time = AY-GÜN-2017
-      //
-      let now = time + '_' + hour
-      let classId = payload.classId
-      let yoklama = payload.yoklama
-      firebase.database().ref('/yoklama/' + classId + '/' + now).push(yoklama).then(data => {
-        console.log(data)
-        router.push('/yoklama-detail/' + classId + '/' + now)
-      })
+    // Rapor sayfasında yoklama için seçilen className ler
+    checkedClassNamesForRapor ({state}, payload) {
+      state.checkedClassNamesForRapor = payload
     }
   },
   mutations: {
     setAuth (state, value) {
       state.auth = value
     },
-    createClass (state, data) {
-      state.loadedClasses.unshift(data)
-    },
+    // is that just for register??
     setSession (state, customerData) {
       state.customer = customerData.id
       state.kurum_name = customerData.kurum_name
@@ -254,6 +191,9 @@ export const store = new Vuex.Store({
         return user.classId === classId
       }) */
     },
+    getAllClasses (state) {
+      return state.allClasses
+    },
     getCustomerId (state) {
       return state.customer
     },
@@ -271,6 +211,12 @@ export const store = new Vuex.Store({
     },
     isAuth (state) {
       return state.isAuth
+    },
+    getClassesForRapor (state) {
+      return state.classRapor
+    },
+    getCheckedClassNamesForRapor (state) {
+      return state.checkedClassNamesForRapor
     }
   },
   modules: {

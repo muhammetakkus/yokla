@@ -68,6 +68,7 @@
         ]
         if (this.$store.getters.isAuth) {
           menuItems = [
+            { icon: 'grain', title: 'RAPOR', link: '/rapor' },
             { icon: 'class', title: 'SINIFLAR', link: '/home' }
           ]
         }
